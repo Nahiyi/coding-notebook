@@ -1,0 +1,31 @@
+编译（打包）后产生两个类：
+1.OuterClass
+package cn.clazs.jdklearn.newfeature.jdk8;
+
+public class OuterClass {
+    public static void main(String[] args) {
+        OuterClass oc = new OuterClass();
+        oc.test();
+    }
+
+    public void test() {
+        // 创建的是匿名内部类的对象，传入外部类的对象
+        Runnable task = new 1(this);
+        (new Thread(task)).start();
+    }
+}
+
+2.OuterClass$1（匿名内部类，Runnable的实现类）
+package cn.clazs.jdklearn.newfeature.jdk8;
+
+class OuterClass$1 implements Runnable {
+    // 构造器，
+    OuterClass$1(OuterClass this$0) {
+        this.this$0 = this$0;
+    }
+
+    public void run() {
+        System.out.println("匿名内部类执行");
+    }
+}
+
