@@ -25,7 +25,7 @@ public class CreateThreadWithoutPool {
     }
 
     private static void method3() throws ExecutionException, InterruptedException {
-        Callable task = () -> {
+        Callable<String> task = () -> {
             int cnt = 50;
             while (cnt >= 2) {
                 cnt--;
