@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 11 风格计算器</title>
+    <style>
+        :root {
+            /* 调色板 - 模仿 Win11 深色模式 */
+            --bg-color: #202020;
+            --calc-bg: #202020;
+            --display-color: #ffffff;
+            --btn-num-bg: #3b3b3b;
+            --btn-func-bg: #323232;
+            --btn-hover: #3f3f3f;
+            --btn-num-hover: #454545;
+            --btn-active: #2a2a2a;
+            --accent-color: #76b9ed; /* 这里的蓝色对应 Win11 计算器的等于号 */
+            --accent-hover: #69a6d6;
+            --accent-text: #000000;
+            --border-radius: 4px;
+            --window-radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
+            user-select: none; /* 防止双击选中文本 */
+        }
+
+        body {
+            background-color: #111;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* 计算器主体 */
+        .calculator {
+            background-color: var(--calc-bg);
+            width: 320px;
+            height: 520px;
+            border-radius: var(--window-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 2px;
+        }
+
+        /* 顶部标题栏 */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .menu-icon {
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .title {
+            font-weight: 600;
+            font-size: 18px;
+        }
+
+        .history-icon {
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* 显示屏区域 */
+        .display-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: flex-end;
+            padding: 0 20px 10px 20px;
+            word-break: break-all;
+            word-wrap: break-word;
+        }
+
+        .previous-operand {
+            color: #a0a0a0;
+            font-size: 1rem;
+            min-height: 24px;
+            margin-bottom: 5px;
+        }
+
+        .current-operand {
+            color: var(--display-color);
+            font-size: 3rem;
+            font-weight: 600;
+        }
+
+        /* 键盘区域 */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 2px;
+            padding: 4px;
+            height: 65%; /* 占据下方大部分空间 */
+        }
+
+        button {
+            border: none;
+            outline: none;
+            font-size: 1.1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.1s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 功能键样式 (%, CE, C, Backspace, 1/x, etc.) */
+        .btn-func {
+            background-color: var(--btn-func-bg);
+            color: #fff;
+        }
+        .btn-func:hover {
+            background-color: var(--btn-hover);
+        }
+        .btn-func:active {
+            background-color: var(--btn-active);
+            font-size: 1rem; /* 点击时的微缩放效果 */
+        }
+
+        /* 数字键样式 (0-9, ., +/-) */
+        .btn-num {
+            background-color: var(--btn-num-bg);
+            color: #fff;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+        .btn-num:hover {
+            background-color: var(--btn-num-hover);
+        }
+        .btn-num:active {
+            background-color: var(--btn-active);
+        }
+
+        /* 等于号样式 */
+        .btn-equal {
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+            font-size: 1.5rem;
+        }
+        .btn-equal:hover {
+            background-color: var(--accent-hover);
+        }
+        .btn-equal:active {
+            background-color: #5a9ac9;
+        }
+
+        /* 特殊字体调整 */
+        .italic-f {
+            font-family: "Times New Roman", serif;
+            font-style: italic;
+        }
+
+        /* 隐藏的辅助空间，模仿截图中的 M+ M- 那一行位置，
+           不需要复杂功能，所以为了美观，直接让按钮填满 */
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="header-left">
+                <div class="menu-icon">☰</div>
+                <div class="title">标准</div>
+            </div>
+            <div class="history-icon">
+                <!-- 简单的历史图标SVG -->
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+            </div>
+        </div>
+
+        <!-- 显示屏 -->
+        <div class="display-container">
+            <div class="previous-operand" id="previous-operand"></div>
+            <div class="current-operand" id="current-operand">0</div>
+        </div>
+
+        <!-- 键盘 -->
+        <div class="keypad">
+            <!-- Row 1 -->
+            <button class="btn-func" onclick="calculator.percent()">%</button>
+            <button class="btn-func" onclick="calculator.clearEntry()">CE</button>
+            <button class="btn-func" onclick="calculator.clear()">C</button>
+            <button class="btn-func" onclick="calculator.delete()">
+                <!-- 退格图标 -->
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+            </button>
+
+            <!-- Row 2 -->
+            <button class="btn-func" onclick="calculator.inverse()">1/<span class="italic-f">x</span></button>
+            <button class="btn-func" onclick="calculator.square()"><span class="italic-f">x</span>²</button>
+            <button class="btn-func" onclick="calculator.sqrt()">²√<span class="italic-f">x</span></button>
+            <button class="btn-func" onclick="calculator.chooseOperation('/')">÷</button>
+
+            <!-- Row 3 -->
+            <button class="btn-num" onclick="calculator.appendNumber('7')">7</button>
+            <button class="btn-num" onclick="calculator.appendNumber('8')">8</button>
+            <button class="btn-num" onclick="calculator.appendNumber('9')">9</button>
+            <button class="btn-func" onclick="calculator.chooseOperation('*')">×</button>
+
+            <!-- Row 4 -->
+            <button class="btn-num" onclick="calculator.appendNumber('4')">4</button>
+            <button class="btn-num" onclick="calculator.appendNumber('5')">5</button>
+            <button class="btn-num" onclick="calculator.appendNumber('6')">6</button>
+            <button class="btn-func" onclick="calculator.chooseOperation('-')">−</button>
+
+            <!-- Row 5 -->
+            <button class="btn-num" onclick="calculator.appendNumber('1')">1</button>
+            <button class="btn-num" onclick="calculator.appendNumber('2')">2</button>
+            <button class="btn-num" onclick="calculator.appendNumber('3')">3</button>
+            <button class="btn-func" onclick="calculator.chooseOperation('+')">+</button>
+
+            <!-- Row 6 -->
+            <button class="btn-num" onclick="calculator.negate()">+/-</button>
+            <button class="btn-num" onclick="calculator.appendNumber('0')">0</button>
+            <button class="btn-num" onclick="calculator.appendNumber('.')">.</button>
+            <button class="btn-equal" onclick="calculator.compute()">=</button>
+        </div>
+    </div>
+
+    <script>
+        class Calculator {
+            constructor(previousOperandTextElement, currentOperandTextElement) {
+                this.previousOperandTextElement = previousOperandTextElement;
+                this.currentOperandTextElement = currentOperandTextElement;
+                this.clear();
+            }
+
+            clear() {
+                this.currentOperand = '0';
+                this.previousOperand = '';
+                this.operation = undefined;
+                this.updateDisplay();
+            }
+
+            clearEntry() {
+                this.currentOperand = '0';
+                this.updateDisplay();
+            }
+
+            delete() {
+                if (this.currentOperand === '0' || this.currentOperand === 'Error') return;
+                this.currentOperand = this.currentOperand.toString().slice(0, -1);
+                if (this.currentOperand === '' || this.currentOperand === '-') {
+                    this.currentOperand = '0';
+                }
+                this.updateDisplay();
+            }
+
+            appendNumber(number) {
+                if (number === '.' && this.currentOperand.includes('.')) return;
+                if (this.currentOperand === '0' && number !== '.') {
+                    this.currentOperand = number.toString();
+                } else {
+                    this.currentOperand = this.currentOperand.toString() + number.toString();
+                }
+                this.updateDisplay();
+            }
+
+            chooseOperation(operation) {
+                if (this.currentOperand === 'Error') return;
+                if (this.currentOperand === '') return;
+                if (this.previousOperand !== '') {
+                    this.compute(true); // Intermediate compute
+                }
+                this.operation = operation;
+                this.previousOperand = this.currentOperand;
+                this.currentOperand = '';
+                this.updateDisplay();
+            }
+
+            // 单目运算 (Immediate execution: %, 1/x, x^2, sqrt)
+            calculateImmediate(type) {
+                let current = parseFloat(this.currentOperand);
+                if (isNaN(current)) return;
+                
+                let result;
+                let steps;
+                
+                switch(type) {
+                    case 'inverse':
+                        if (current === 0) {
+                            this.currentOperand = "Error"; // 不能除以0
+                            this.updateDisplay();
+                            return;
+                        }
+                        result = 1 / current;
+                        steps = `1/(${result})`; // 简化显示
+                        break;
+                    case 'square':
+                        result = current * current;
+                        break;
+                    case 'sqrt':
+                        if (current < 0) {
+                            this.currentOperand = "Error";
+                            this.updateDisplay();
+                            return;
+                        }
+                        result = Math.sqrt(current);
+                        break;
+                    case 'negate':
+                        result = current * -1;
+                        this.currentOperand = result;
+                        this.updateDisplay();
+                        return; // Negate 直接更新当前值，不影响 History 逻辑
+                    case 'percent':
+                        result = current / 100;
+                        break;
+                }
+
+                this.currentOperand = result;
+                this.updateDisplay();
+            }
+
+            inverse() { this.calculateImmediate('inverse'); }
+            square() { this.calculateImmediate('square'); }
+            sqrt() { this.calculateImmediate('sqrt'); }
+            negate() { this.calculateImmediate('negate'); }
+            percent() { this.calculateImmediate('percent'); }
+
+            compute(intermediate = false) {
+                let computation;
+                const prev = parseFloat(this.previousOperand);
+                const current = parseFloat(this.currentOperand);
+                if (isNaN(prev) || isNaN(current)) return;
+                
+                switch (this.operation) {
+                    case '+':
+                        computation = prev + current;
+                        break;
+                    case '-':
+                        computation = prev - current;
+                        break;
+                    case '*':
+                        computation = prev * current;
+                        break;
+                    case '/':
+                        if (current === 0) {
+                            this.currentOperand = "不能除以 0";
+                            this.previousOperand = '';
+                            this.operation = undefined;
+                            this.updateDisplay();
+                            return;
+                        }
+                        computation = prev / current;
+                        break;
+                    default:
+                        return;
+                }
+                
+                // 处理浮点数精度问题 (例如 0.1 + 0.2)
+                computation = Math.round(computation * 10000000000) / 10000000000;
+
+                this.currentOperand = computation;
+                this.operation = undefined;
+                this.previousOperand = '';
+                
+                // 如果是连续运算，保留 previousOperand (这里简化处理，直接显示结果)
+                this.updateDisplay();
+            }
+
+            getDisplayNumber(number) {
+                if (number === 'Error' || number === '不能除以 0') return number;
+                const stringNumber = number.toString();
+                const integerDigits = parseFloat(stringNumber.split('.')[0]);
+                const decimalDigits = stringNumber.split('.')[1];
+                let integerDisplay;
+                if (isNaN(integerDigits)) {
+                    integerDisplay = '';
+                } else {
+                    integerDisplay = integerDigits.toLocaleString('en', { maximumFractionDigits: 0 });
+                }
+                if (decimalDigits != null) {
+                    return `${integerDisplay}.${decimalDigits}`;
+                } else {
+                    return integerDisplay;
+                }
+            }
+
+            updateDisplay() {
+                // 如果是负号开头（输入中），特殊处理
+                if (this.currentOperand === '-') {
+                    this.currentOperandTextElement.innerText = '-';
+                } else {
+                    this.currentOperandTextElement.innerText = this.getDisplayNumber(this.currentOperand);
+                }
+
+                if (this.operation != null) {
+                    // 将操作符转换为显示符号
+                    let opDisplay = this.operation;
+                    if (opDisplay === '/') opDisplay = '÷';
+                    if (opDisplay === '*') opDisplay = '×';
+                    
+                    this.previousOperandTextElement.innerText = 
+                        `${this.getDisplayNumber(this.previousOperand)} ${opDisplay}`;
+                } else {
+                    this.previousOperandTextElement.innerText = '';
+                }
+                
+                // 动态调整字体大小 (简化版)
+                if (this.currentOperand.toString().length > 10) {
+                    this.currentOperandTextElement.style.fontSize = "2rem";
+                } else {
+                    this.currentOperandTextElement.style.fontSize = "3rem";
+                }
+            }
+        }
+
+        const previousOperandTextElement = document.getElementById('previous-operand');
+        const currentOperandTextElement = document.getElementById('current-operand');
+
+        const calculator = new Calculator(previousOperandTextElement, currentOperandTextElement);
+
+        // 添加键盘支持 (可选，但为了更好的体验)
+        document.addEventListener('keydown', (e) => {
+            if ((e.key >= 0 && e.key <= 9) || e.key === '.') calculator.appendNumber(e.key);
+            if (e.key === '=' || e.key === 'Enter') { e.preventDefault(); calculator.compute(); }
+            if (e.key === 'Backspace') calculator.delete();
+            if (e.key === 'Escape') calculator.clear();
+            if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') calculator.chooseOperation(e.key);
+        });
+
+    </script>
+</body>
+</html>
