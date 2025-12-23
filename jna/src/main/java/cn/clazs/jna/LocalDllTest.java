@@ -55,7 +55,7 @@ public class LocalDllTest {
             System.out.println("✅ 成功复制DLL到: " + tempFile.getAbsolutePath());
 
             // 加载本地DLL
-            return (CLibrary) Native.load(tempFile.getAbsolutePath(), CLibrary.class);
+            return Native.load(tempFile.getAbsolutePath(), CLibrary.class);
 
         } catch (Exception e) {
             System.out.println("❌ 加载本地DLL失败: " + e.getMessage());
@@ -102,6 +102,5 @@ public class LocalDllTest {
         System.out.println("=== 结论 ===");
         System.out.println("✅ 系统DLL: 可以直接通过库名加载");
         System.out.println("✅ 本地DLL: 可以通过文件路径加载");
-        System.out.println("💡 实习建议: 自定义库文件放在resources/libs/目录下，使用绝对路径加载");
     }
 }

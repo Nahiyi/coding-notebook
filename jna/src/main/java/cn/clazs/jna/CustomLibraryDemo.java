@@ -128,7 +128,7 @@ public class CustomLibraryDemo {
             System.out.println("错误信息: " + e.getMessage());
         }
 
-        System.out.println("\n=== 实习应用建议 ===");
+        System.out.println("\n=== 应用建议 ===");
         System.out.println("1. 将DLL/SO文件放在resources/libs/对应平台目录下");
         System.out.println("2. 使用loadFromResources()方法从resources加载");
         System.out.println("3. 注意32位/64位库与JDK版本的匹配");

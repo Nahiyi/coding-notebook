@@ -61,7 +61,7 @@ public class HelloWorld {
 
         // 4. 内存分配演示
         System.out.println("\n4. 内存分配演示:");
-        com.sun.jna.Pointer ptr = CLibrary.INSTANCE.malloc(1024);
+        Pointer ptr = CLibrary.INSTANCE.malloc(1024);
         System.out.println("分配的内存地址: " + ptr);
         CLibrary.INSTANCE.free(ptr);
         System.out.println("内存已释放");
