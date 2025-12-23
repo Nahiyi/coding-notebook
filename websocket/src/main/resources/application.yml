@@ -1,0 +1,14 @@
+server:
+  port: 9058
+
+spring:
+  application:
+    name: websocket-demo
+
+logging:
+  level:
+    root: INFO
+    cn.clazs.websocket: DEBUG
+  pattern:
+    console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n'
+    file: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} [%file:%line] - %msg%n'
