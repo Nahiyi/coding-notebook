@@ -1,4 +1,4 @@
-package cn.clazs.jdklearn.newfeature.jdk8.lambdaexpression;
+package cn.clazs.jdk.newfeature.jdk8.lambdaexpression;
 
 import java.util.ArrayList;
 import java.util.List;

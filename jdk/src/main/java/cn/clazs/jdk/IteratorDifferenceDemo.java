@@ -1,4 +1,4 @@
-package cn.clazs.jdklearn;
+package cn.clazs.jdk;
 
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;

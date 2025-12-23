@@ -1,4 +1,4 @@
-package cn.clazs.jdklearn.newfeature.jdk8.anonymousinnerclass;
+package cn.clazs.jdk.newfeature.jdk8.anonymousinnerclass;
 
 public class OuterClass {
     public static void main(String[] args) {

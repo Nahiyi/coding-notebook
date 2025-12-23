@@ -1,4 +1,4 @@
-package cn.clazs.jdklearn.jucapi.multiplethread;
+package cn.clazs.jdk.jucapi.multiplethread;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.Callable;

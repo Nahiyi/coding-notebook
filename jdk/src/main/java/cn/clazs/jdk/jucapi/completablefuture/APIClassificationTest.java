@@ -1,4 +1,4 @@
-package cn.clazs.jdklearn.jucapi.completablefuture;
+package cn.clazs.jdk.jucapi.completablefuture;
 
 import java.util.concurrent.CompletableFuture;
 
