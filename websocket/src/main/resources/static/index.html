@@ -331,6 +331,14 @@
         window.addEventListener('load', function() {
             addSystemMessage('点击"连接"按钮连接到WebSocket服务器');
         });
+
+        // 监听页面卸载事件，确保关闭 WebSocket 连接
+        window.addEventListener('beforeunload', function() {
+          if (websocket) {
+            websocket.close();
+          }
+        });
+
     </script>
 </body>
 </html>
