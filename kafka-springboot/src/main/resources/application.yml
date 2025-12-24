@@ -1,0 +1,69 @@
+server:
+  port: 9059
+
+spring:
+  application:
+    name: kafka-springboot
+
+  # Kafka配置
+  kafka:
+    # Kafka服务器地址（多个用逗号分隔）
+    bootstrap-servers: 172.23.146.17:9092
+
+    # 生产者配置
+    producer:
+      # key序列化器
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # value序列化器
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # acks配置：all(或-1)表示leader和所有副本都确认收到消息
+      acks: all
+      # 重试次数
+      retries: 3
+      # 批量发送大小（字节）
+      batch-size: 16384
+      # 批量发送延迟时间（毫秒）
+      linger-ms: 10
+      # 生产者缓冲区大小
+      buffer-memory: 33554432
+
+    # 消费者配置
+    consumer:
+      # 消费者组ID
+      group-id: spring-boot-kafka-group
+      # key反序列化器
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # value反序列化器
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # 自动提交offset
+      enable-auto-commit: true
+      # 自动提交间隔时间（毫秒）
+      auto-commit-interval-ms: 1000
+      # 当没有初始offset或offset无效时，自动重置offset的策略
+      # earliest: 重置到最早的消息
+      # latest: 重置到最新的消息
+      # none: 抛出异常
+      auto-offset-reset: earliest
+
+    # 监听器配置
+    listener:
+      # 监听器线程数
+      concurrency: 3
+      # 监听器类型：single（单线程）或 batch（批量）
+      type: single
+
+# 自定义Kafka主题配置
+kafka:
+  topic:
+    default: topic1
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    cn.clazs.kafka: DEBUG
+    org.springframework.kafka: INFO
+    org.apache.kafka.clients.NetworkClient: WARN
+    org.apache.kafka.clients: WARN # Producer等类每次都打印一堆INFO日志太占地方
+  pattern:
+    console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n'
