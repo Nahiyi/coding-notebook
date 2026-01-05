@@ -21,11 +21,11 @@ spring:
       # 重试次数
       retries: 3
       # 批量发送大小（字节）
-      batch-size: 16384
+      batch-size: 16384 # 16KB
       # 批量发送延迟时间（毫秒）
       linger-ms: 10
       # 生产者缓冲区大小
-      buffer-memory: 33554432
+      buffer-memory: 33554432 # 32MB
 
     # 消费者配置
     consumer:
