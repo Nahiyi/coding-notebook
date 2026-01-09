@@ -1,0 +1,29 @@
+server:
+  port: 9060
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: springboot-netty
+
+# Netty服务器配置
+netty:
+  tcp:
+    enabled: true
+    port: 9001
+  websocket:
+    enabled: true
+    port: 9002
+    path: /ws
+  http:
+    enabled: true
+    port: 9003
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    cn.clazs.netty: DEBUG
+  pattern:
+    console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){highlight} %clr(%logger{36}){cyan} - %msg%n'
