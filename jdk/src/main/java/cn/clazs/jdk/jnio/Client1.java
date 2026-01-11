@@ -1,0 +1,24 @@
+package cn.clazs.jdk.jnio;
+
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.IOException;
+import java.net.Socket;
+
+@Slf4j
+public class Client1 {
+    public static void main(String[] args) {
+        // 通过指定ip、端口建立连接
+        try (Socket socket = new Socket("localhost", 7070)) {
+            log.debug("{}", socket);
+
+            // 尝试发送数据
+            socket.getOutputStream().write("world".getBytes());
+
+            // 模拟一个阻塞，来维持连接不关闭
+            System.in.read();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
