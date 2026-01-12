@@ -14,5 +14,7 @@ public class Client2 {
 
         // 模拟阻塞等待
         System.in.read();
+
+        sc.close();
     }
 }

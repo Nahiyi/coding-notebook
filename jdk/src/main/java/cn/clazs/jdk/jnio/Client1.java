@@ -17,6 +17,9 @@ public class Client1 {
 
             // 模拟一个阻塞，来维持连接不关闭
             System.in.read();
+
+            // close是正常断开连接
+            socket.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

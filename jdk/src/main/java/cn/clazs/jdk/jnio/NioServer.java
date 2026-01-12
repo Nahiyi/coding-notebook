@@ -91,11 +91,25 @@ public class NioServer {
                         sc.configureBlocking(false);
                         sc.register(selector, SelectionKey.OP_READ);
                     } else if (key.isReadable()) {
-                        SocketChannel channel = (SocketChannel) key.channel();
-                        ByteBuffer bf = ByteBuffer.allocate(16);
-                        channel.read(bf);
-                        bf.flip();
-                        debugRead(bf);
+                        try {
+                            SocketChannel channel = (SocketChannel) key.channel();
+                            ByteBuffer bf = ByteBuffer.allocate(16);
+                            int read = channel.read(bf);
+                            if (read == -1) {
+                                // 读到-1是正常断开，也需取消注册；无论如何断开，都会发送读事件
+                                log.warn("key: {} 正常断开连接", key);
+                                key.cancel();
+                            } else {
+                                bf.flip();
+                                debugRead(bf);
+                            }
+                        } catch (IOException e) {
+                            // 客户端异常断开，read会抛异常，导致read时间没被处理
+                            // select后续就不会阻塞，会造成死循环效果，所以必须加cancel
+                            // 将该key对应的SocketChannel从selector上取消注册
+                            log.error("key: {} 异常断开连接", key);
+                            key.cancel();
+                        }
                     } else if (key.isWritable()) {
 
                     }
