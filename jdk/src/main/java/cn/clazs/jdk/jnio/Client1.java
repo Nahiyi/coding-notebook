@@ -13,7 +13,7 @@ public class Client1 {
             log.debug("{}", socket);
 
             // 尝试发送数据
-            socket.getOutputStream().write("world".getBytes());
+            socket.getOutputStream().write("hello".getBytes());
 
             // 模拟一个阻塞，来维持连接不关闭
             System.in.read();
