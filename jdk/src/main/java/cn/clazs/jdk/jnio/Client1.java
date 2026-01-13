@@ -13,7 +13,9 @@ public class Client1 {
             log.debug("{}", socket);
 
             // 尝试发送数据
-            socket.getOutputStream().write("hello".getBytes());
+            String data = "hello";
+            log.debug("发送数据: {}", data);
+            socket.getOutputStream().write(data.getBytes());
 
             // 模拟一个阻塞，来维持连接不关闭
             System.in.read();
