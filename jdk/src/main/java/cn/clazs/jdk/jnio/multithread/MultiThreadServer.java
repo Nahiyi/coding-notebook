@@ -27,10 +27,15 @@ public class MultiThreadServer {
         // 设置 SelectionKey 关注连接事件，当有新的客户端连接请求到达时，Selector 会通知该线程
         sscKey.interestOps(SelectionKey.OP_ACCEPT);
         ssc.bind(new InetSocketAddress(7070));
+        Thread.currentThread().setName("boss");
         log.debug("服务器初始化完毕: ServerSocketChannel-SelectionKey: {}", sscKey);
 
-        Worker worker = new Worker("worker-0");
+        Worker[] workers = new Worker[2];
+        for (int i = 0; i < workers.length; i++) {
+            workers[i] = new Worker("worker-" + i);
+        }
 
+        long idx = 0L;
         while (true) {
             boss.select();
             Iterator<SelectionKey> iter = boss.selectedKeys().iterator();
@@ -45,6 +50,9 @@ public class MultiThreadServer {
                     SocketChannel channel = ssc.accept();
                     channel.configureBlocking(false); // 设为非阻塞模式
 
+                    // 轮询，从多个worker中取处理连接（简单负载均衡）
+                    Worker worker = workers[(int) (idx % workers.length)];
+                    idx++;
                     log.debug("[before] 将客户端Channel注册到 {} 的 Selector 上", worker.getName());
                     // 为当前连接的客户端channel关注读事件
                     worker.register(channel);
