@@ -7,7 +7,7 @@
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
             <layout class="ch.qos.logback.classic.PatternLayout">
                 <pattern>
-                    %d{HH:mm:ss} [%highlight(%-5level)] [%thread] %cyan(%logger{15}) - %msg%n
+                    %d{HH:mm:ss.SSS} [%highlight(%-5level)] [%thread] %cyan(%logger{15}) - %msg%n
                 </pattern>
             </layout>
         </encoder>
