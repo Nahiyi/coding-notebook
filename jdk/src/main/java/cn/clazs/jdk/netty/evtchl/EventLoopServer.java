@@ -1,4 +1,4 @@
-package cn.clazs.jdk.netty;
+package cn.clazs.jdk.netty.evtchl;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;

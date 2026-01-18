@@ -36,4 +36,5 @@
 
     <!-- 特定包的日志级别 -->
     <logger name="cn.clazs.jdk" level="DEBUG"/>
+    <logger name="io.netty.handler.logging" level="DEBUG"/>
 </configuration>
