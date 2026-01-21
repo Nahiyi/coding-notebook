@@ -1,15 +1,14 @@
 package cn.clazs.jdk.netty.echo.client;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
 import java.util.Scanner;
 
 @Slf4j
@@ -21,14 +20,16 @@ public class DemoClient {
                 .handler(new ChannelInitializer<NioSocketChannel>() {
                     @Override
                     protected void initChannel(NioSocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
-                            @Override
-                            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                                ByteBuf buf = (ByteBuf) msg;
-                                log.info("[Echo]: {}", buf.toString(Charset.defaultCharset()));
-                                // super.channelRead(ctx, msg);
-                            }
-                        });
+                        ch.pipeline()
+                                .addLast(new StringEncoder())
+                                .addLast(new StringDecoder())
+                                .addLast(new ChannelInboundHandlerAdapter() {
+                                    @Override
+                                    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                                        String str = (String) msg;
+                                        log.info("[Echo]: {}", str);
+                                    }
+                                });
                     }
                 })
                 .connect(new InetSocketAddress("localhost", 7070));
@@ -52,9 +53,7 @@ public class DemoClient {
                         }
                     }
                     log.debug("客户端发送: {}", line);
-                    ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
-                    buf.writeBytes(line.getBytes());
-                    channel.writeAndFlush(buf);
+                    channel.writeAndFlush(line);
                 }
             }).start();
         });
