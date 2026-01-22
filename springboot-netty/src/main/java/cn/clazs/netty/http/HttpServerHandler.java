@@ -26,6 +26,11 @@ import static javax.sound.sampled.LineEvent.Type.CLOSE;
  * - 支持Keep-Alive连接
  * - 返回JSON和HTML格式数据
  *
+ * Pipeline架构说明：
+ * 1. HttpServerCodec: 将ByteBuf解码为HttpRequest/HttpContent
+ * 2. HttpObjectAggregator: 将HttpRequest + HttpContent聚合为FullHttpRequest
+ * 3. HttpServerHandler: 处理完整的FullHttpRequest（本类）
+ *
  * 应用场景：
  * - 替代Tomcat提供HTTP服务（高性能场景）
  * - 微服务网关（如Spring Cloud Gateway）
@@ -35,50 +40,52 @@ import static javax.sound.sampled.LineEvent.Type.CLOSE;
  * @author clazs
  */
 @Slf4j
-public class HttpServerHandler extends SimpleChannelInboundHandler<HttpObject> {
+public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private static final byte[] CONTENT = "Hello World from Netty HTTP Server!".getBytes(StandardCharsets.UTF_8);
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) {
-        if (msg instanceof HttpRequest) {
-            HttpRequest req = (HttpRequest) msg;
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest req) {
+        // HttpObjectAggregator 已经将 HttpRequest 和 HttpContent 聚合为 FullHttpRequest
+        // 所以这里直接收到的就是完整的HTTP请求对象，无需手动拼接或类型判断
 
-            // 获取请求信息
-            String uri = req.uri();
-            String method = req.method().name();
-            boolean keepAlive = HttpUtil.isKeepAlive(req);
+        // 获取请求信息
+        String uri = req.uri();
+        String method = req.method().name();
+        boolean keepAlive = HttpUtil.isKeepAlive(req);
 
-            log.info("收到HTTP请求: {} {} - 来自: {}", method, uri, ctx.channel().remoteAddress());
+        log.info("收到HTTP请求: {} {} - 来自: {}", method, uri, ctx.channel().remoteAddress());
 
-            // 构造响应
-            FullHttpResponse response = new DefaultFullHttpResponse(
-                    HTTP_1_1,
-                    OK,
-                    Unpooled.wrappedBuffer(CONTENT)
-            );
+        // 如果需要读取请求体（POST请求等），可以直接读取
+        // String body = req.content().toString(StandardCharsets.UTF_8);
 
-            // 设置响应头
-            response.headers()
-                    .set(CONTENT_TYPE, "text/plain; charset=UTF-8")
-                    .setInt(CONTENT_LENGTH, response.content().readableBytes());
+        // 构造响应
+        FullHttpResponse response = new DefaultFullHttpResponse(
+                HTTP_1_1,
+                OK,
+                Unpooled.wrappedBuffer(CONTENT)
+        );
 
-            // 设置Keep-Alive
-            if (keepAlive) {
-                if (!req.protocolVersion().isKeepAliveDefault()) {
-                    response.headers().set(CONNECTION, KEEP_ALIVE);
-                }
-            } else {
-                response.headers().set(CONNECTION, CLOSE);
+        // 设置响应头
+        response.headers()
+                .set(CONTENT_TYPE, "text/plain; charset=UTF-8")
+                .setInt(CONTENT_LENGTH, response.content().readableBytes());
+
+        // 设置Keep-Alive
+        if (keepAlive) {
+            if (!req.protocolVersion().isKeepAliveDefault()) {
+                response.headers().set(CONNECTION, KEEP_ALIVE);
             }
+        } else {
+            response.headers().set(CONNECTION, CLOSE);
+        }
 
-            // 发送响应
-            ctx.write(response);
+        // 发送响应
+        ctx.write(response);
 
-            if (!keepAlive) {
-                // 如果不支持Keep-Alive，发送完成后关闭连接
-                ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-            }
+        if (!keepAlive) {
+            // 如果不支持Keep-Alive，发送完成后关闭连接
+            ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
     }
 
