@@ -1,6 +1,8 @@
 package cn.clazs.websocket.controller;
 
+import cn.clazs.websocket.handler.RedisMessageHandler;
 import cn.clazs.websocket.handler.WebSocketHandler;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +13,7 @@ import java.util.Map;
  * WebSocket REST控制器
  * 提供HTTP接口用于服务端主动推送消息
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/ws")
 @CrossOrigin(origins = "*")
@@ -18,6 +21,9 @@ public class AdminController {
 
     @Autowired
     private WebSocketHandler webSocketHandler;
+
+    @Autowired
+    private RedisMessageHandler redisMessageHandler;
 
     /**
      * 广播消息给所有连接的客户端
@@ -69,6 +75,64 @@ public class AdminController {
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
         response.put("message", "系统通知已发送");
+        return response;
+    }
+
+    /**
+     * 获取所有在线用户的session ID列表
+     */
+    @GetMapping("/sessions")
+    public Map<String, Object> getAllSessions() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("sessions", webSocketHandler.getAllSessionIds());
+        response.put("count", webSocketHandler.getConnectionCount());
+        log.info("获取所有在线用户列表，当前连接数: {}", webSocketHandler.getConnectionCount());
+        return response;
+    }
+
+    /**
+     * 发送点对点消息（跨服务器支持）
+     * 通过Redis发布消息，所有服务器都会尝试发送，只有目标用户所在的服务器会成功
+     */
+    @PostMapping("/send-to-user")
+    public Map<String, Object> sendToUser(@RequestBody Map<String, String> request) {
+        String senderSessionId = request.get("senderSessionId");
+        String receiverSessionId = request.get("receiverSessionId");
+        String message = request.get("message");
+
+        // 参数校验
+        if (senderSessionId == null || senderSessionId.trim().isEmpty()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "发送者会话ID不能为空");
+            return response;
+        }
+
+        if (receiverSessionId == null || receiverSessionId.trim().isEmpty()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "接收者会话ID不能为空");
+            return response;
+        }
+
+        if (message == null || message.trim().isEmpty()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "消息内容不能为空");
+            return response;
+        }
+
+        // 发布消息到Redis主题
+        redisMessageHandler.publishMessage(senderSessionId, receiverSessionId, message);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "消息已发布到Redis，正在转发给目标用户");
+        response.put("senderSessionId", senderSessionId);
+        response.put("receiverSessionId", receiverSessionId);
+        log.info("发送点对点消息 - 发送者: {}, 接收者: {}, 内容: {}",
+                senderSessionId, receiverSessionId, message);
         return response;
     }
 }

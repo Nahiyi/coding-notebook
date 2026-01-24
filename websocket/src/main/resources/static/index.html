@@ -172,16 +172,140 @@
             background: #f44336;
             margin-left: 10px;
         }
+
+        .config-area {
+            padding: 15px 20px;
+            background: #f9f9f9;
+            border-top: 1px solid #e0e0e0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .config-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .config-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .config-input-group input[type="text"] {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .config-input-group input[type="text"]:focus {
+            border-color: #667eea;
+        }
+
+        .quick-ports {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .quick-port-btn {
+            padding: 5px 12px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #667eea;
+        }
+
+        .quick-port-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .server-info {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .target-user-area {
+            padding: 15px 20px;
+            background: #f9f9f9;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .target-user-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .target-user-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .target-user-input:focus {
+            border-color: #667eea;
+        }
+
+        .target-user-info {
+            font-size: 12px;
+            color: #888;
+            margin-top: 8px;
+        }
+
+        .my-session-id {
+            font-size: 12px;
+            color: #667eea;
+            font-weight: bold;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚀 WebSocket 实时通信演示</h1>
+            <h1>🚀 WebSocket 点对点聊天</h1>
             <span class="status disconnected" id="status">未连接</span>
+            <div class="my-session-id" id="mySessionId" style="display: none;">我的会话ID: --</div>
         </div>
 
         <div class="messages" id="messages"></div>
+
+        <div class="target-user-area" id="targetUserArea" style="display: none;">
+            <div class="target-user-title">🎯 目标用户会话ID</div>
+            <input type="text" class="target-user-input" id="targetUserInput" placeholder="输入目标用户的会话ID...">
+            <div class="target-user-info">输入要接收消息的用户会话ID</div>
+        </div>
+
+        <div class="config-area">
+            <div class="config-title">🔧 服务器配置</div>
+            <div class="config-input-group">
+                <input type="text" id="hostInput" placeholder="主机地址" value="localhost">
+                <span>:</span>
+                <input type="text" id="portInput" placeholder="端口" value="9058" style="flex: 0 0 80px;">
+            </div>
+            <div class="quick-ports">
+                <button class="quick-port-btn" onclick="setPort('9058')">端口 9058</button>
+                <button class="quick-port-btn" onclick="setPort('9059')">端口 9059</button>
+                <button class="quick-port-btn" onclick="setPort('9060')">端口 9060</button>
+                <button class="quick-port-btn" onclick="setPort('9061')">端口 9061</button>
+            </div>
+            <div class="server-info" id="serverInfo">当前配置: ws://localhost:9058/ws</div>
+        </div>
 
         <div class="input-area">
             <div class="input-group">
@@ -195,30 +319,78 @@
 
     <script>
         let websocket = null;
+        let mySessionId = null;
         const messages = document.getElementById('messages');
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         const connectBtn = document.getElementById('connectBtn');
         const clearBtn = document.getElementById('clearBtn');
         const status = document.getElementById('status');
+        const hostInput = document.getElementById('hostInput');
+        const portInput = document.getElementById('portInput');
+        const serverInfo = document.getElementById('serverInfo');
+        const targetUserArea = document.getElementById('targetUserArea');
+        const targetUserInput = document.getElementById('targetUserInput');
+        const mySessionIdDisplay = document.getElementById('mySessionId');
+
+        // 快速设置端口
+        function setPort(port) {
+            portInput.value = port;
+            updateServerInfo();
+            addSystemMessage(`已选择端口: ${port}`);
+        }
+
+        // 更新服务器信息显示
+        function updateServerInfo() {
+            const host = hostInput.value.trim() || 'localhost';
+            const port = portInput.value.trim() || '9058';
+            const wsUrl = `ws://${host}:${port}/ws`;
+            serverInfo.textContent = `当前配置: ${wsUrl}`;
+        }
+
+        // 监听输入框变化
+        hostInput.addEventListener('input', updateServerInfo);
+        portInput.addEventListener('input', updateServerInfo);
 
         // 连接WebSocket
         function connect() {
-            const wsUrl = 'ws://localhost:9058/ws';
+            const host = hostInput.value.trim() || 'localhost';
+            const port = portInput.value.trim() || '9058';
+            const wsUrl = `ws://${host}:${port}/ws`;
+
+            addSystemMessage(`正在连接到 ${wsUrl}...`);
 
             try {
                 websocket = new WebSocket(wsUrl);
 
                 websocket.onopen = function(event) {
                     updateStatus(true);
-                    addSystemMessage('已连接到服务器');
+                    addSystemMessage(`✅ 已连接到服务器: ${wsUrl}`);
                     messageInput.disabled = false;
                     sendBtn.disabled = false;
                     connectBtn.textContent = '断开';
+
+                    // 禁用配置输入
+                    hostInput.disabled = true;
+                    portInput.disabled = true;
+
+                    // 显示目标用户输入区域
+                    targetUserArea.style.display = 'block';
                 };
 
                 websocket.onmessage = function(event) {
-                    addMessage(event.data, 'received');
+                    const data = event.data;
+
+                    // 检查是否是欢迎消息，提取session ID
+                    if (data.includes('欢迎连接到WebSocket服务器！你的ID:')) {
+                        mySessionId = data.split('你的ID: ')[1].trim();
+                        mySessionIdDisplay.textContent = `我的会话ID: ${mySessionId}`;
+                        mySessionIdDisplay.style.display = 'block';
+                        addSystemMessage(`💡 你的会话ID: ${mySessionId}`);
+                        addSystemMessage(`💡 请在"目标用户会话ID"输入框中输入要发送消息的用户ID`);
+                    }
+
+                    addMessage(data, 'received');
                 };
 
                 websocket.onerror = function(event) {
@@ -228,10 +400,19 @@
 
                 websocket.onclose = function(event) {
                     updateStatus(false);
-                    addSystemMessage('已断开连接');
+                    addSystemMessage('❌ 已断开连接');
                     messageInput.disabled = true;
                     sendBtn.disabled = true;
                     connectBtn.textContent = '连接';
+
+                    // 启用配置输入
+                    hostInput.disabled = false;
+                    portInput.disabled = false;
+
+                    // 隐藏目标用户区域
+                    targetUserArea.style.display = 'none';
+                    mySessionIdDisplay.style.display = 'none';
+                    mySessionId = null;
                 };
             } catch (error) {
                 addSystemMessage('连接失败: ' + error.message);
@@ -248,18 +429,62 @@
         }
 
         // 发送消息
-        function sendMessage() {
+        async function sendMessage() {
             const message = messageInput.value.trim();
+            const targetUser = targetUserInput.value.trim();
+
             if (!message) {
+                alert('请输入消息内容！');
                 return;
             }
 
-            if (websocket && websocket.readyState === WebSocket.OPEN) {
-                websocket.send(message);
-                addMessage(message, 'sent');
-                messageInput.value = '';
-            } else {
-                addSystemMessage('未连接到服务器！');
+            if (!targetUser) {
+                alert('请输入目标用户的会话ID！');
+                return;
+            }
+
+            if (targetUser === mySessionId) {
+                alert('不能发送消息给自己！');
+                return;
+            }
+
+            if (!mySessionId) {
+                alert('未连接到服务器或会话ID未获取！');
+                return;
+            }
+
+            // 通过HTTP API发送点对点消息
+            const host = hostInput.value.trim() || 'localhost';
+            const port = portInput.value.trim() || '9058';
+            const apiUrl = `http://${host}:${port}/api/ws/send-to-user`;
+
+            try {
+                addSystemMessage(`🎯 正在发送消息给: ${targetUser}`);
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        senderSessionId: mySessionId,
+                        receiverSessionId: targetUser,
+                        message: message
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    addMessage(message, 'sent');
+                    addSystemMessage(`✅ 消息已发送`);
+                    messageInput.value = '';
+                } else {
+                    addSystemMessage(`❌ 发送失败: ${data.message}`);
+                }
+            } catch (error) {
+                addSystemMessage(`❌ 发送失败: ${error.message}`);
+                console.error('发送点对点消息失败:', error);
             }
         }
 
@@ -327,9 +552,13 @@
 
         clearBtn.addEventListener('click', clearMessages);
 
-        // 页面加载完成后自动连接
+        // 页面加载完成后初始化
         window.addEventListener('load', function() {
-            addSystemMessage('点击"连接"按钮连接到WebSocket服务器');
+            updateServerInfo();
+            addSystemMessage('👋 欢迎使用WebSocket点对点聊天系统');
+            addSystemMessage('💡 配置服务器地址和端口，然后点击"连接"按钮');
+            addSystemMessage('💡 连接后会在欢迎消息中显示你的会话ID');
+            addSystemMessage('💡 将会话ID复制给好友，即可进行点对点聊天');
         });
 
         // 监听页面卸载事件，确保关闭 WebSocket 连接
