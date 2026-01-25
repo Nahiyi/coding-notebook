@@ -1,6 +1,6 @@
 package cn.clazs.websocket.controller;
 
-import cn.clazs.websocket.handler.RedisMessageHandler;
+import cn.clazs.websocket.handler.MessageHandler;
 import cn.clazs.websocket.handler.WebSocketHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class AdminController {
     private WebSocketHandler webSocketHandler;
 
     @Autowired
-    private RedisMessageHandler redisMessageHandler;
+    private MessageHandler messageHandler;
 
     /**
      * 广播消息给所有连接的客户端
@@ -93,7 +93,7 @@ public class AdminController {
 
     /**
      * 发送点对点消息（跨服务器支持）
-     * 通过Redis发布消息，所有服务器都会尝试发送，只有目标用户所在的服务器会成功
+     * 通过消息代理（Redis/RabbitMQ）发布，所有服务器都会尝试发送，只有目标用户所在的服务器会成功
      */
     @PostMapping("/send-to-user")
     public Map<String, Object> sendToUser(@RequestBody Map<String, String> request) {
@@ -123,16 +123,17 @@ public class AdminController {
             return response;
         }
 
-        // 发布消息到Redis主题
-        redisMessageHandler.publishMessage(senderSessionId, receiverSessionId, message);
+        // 发布消息到消息代理（Redis或RabbitMQ，由配置决定）
+        messageHandler.publish(senderSessionId, receiverSessionId, message);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "消息已发布到Redis，正在转发给目标用户");
+        response.put("message", "消息已发布到" + messageHandler.getType() + "，正在转发给目标用户");
         response.put("senderSessionId", senderSessionId);
         response.put("receiverSessionId", receiverSessionId);
-        log.info("发送点对点消息 - 发送者: {}, 接收者: {}, 内容: {}",
-                senderSessionId, receiverSessionId, message);
+        response.put("brokerType", messageHandler.getType());
+        log.info("发送点对点消息 - 发送者: {}, 接收者: {}, 内容: {}, 消息代理: {}",
+                senderSessionId, receiverSessionId, message, messageHandler.getType());
         return response;
     }
 }

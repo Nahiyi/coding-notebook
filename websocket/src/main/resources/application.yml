@@ -1,14 +1,28 @@
 server:
   port: 9058
 
+# 消息代理配置（redis或rabbitmq）
+message:
+  broker:
+    type: rabbitmq  # redis 或 rabbitmq
+
 spring:
   application:
     name: websocket-demo
+  # Redis配置（使用redis时需要）
   redis:
     host: localhost
     port: 6379
     timeout: 2000ms
     database: 0
+
+  # RabbitMQ配置（使用rabbitmq时需要）
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: /
 
 logging:
   level:
